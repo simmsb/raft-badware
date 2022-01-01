@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  node:
+    build: .
+    depends_on:
+      - redis
+    volumes:
+      - shared:/shared
+    networks:
+      - actorsbad
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      BACKEND_PORT: 8119
+      PORT: 8118
+      CRYPTO_STORE: "/shared"
+    restart: always
+    command: server
+    scale: 5
+
+  redis:
+    image: redis:alpine
+    networks:
+      - actorsbad
+
+  client:
+    build: .
+    depends_on:
+      - redis
+      - node
+    volumes:
+      - shared:/shared
+    networks:
+      - actorsbad
+    stdin_open: true
+    tty: true
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CRYPTO_STORE: "/shared"
+    restart: always
+    scale: 3
+
+networks:
+  actorsbad:
+
+volumes:
+  shared:
